@@ -1,0 +1,88 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+func Dlina(s string) string {
+	if len(s) > 40 {
+		return s[:40] + "..."
+	}
+	return s
+}
+
+func Chisla(n int) bool {
+	return n >= 1 && n <= 10
+}
+
+func Stroka(s string) bool {
+	return len(s) <= 10
+}
+
+func calculate(expression string) string {
+	reString := regexp.MustCompile(`^"([^"]*)"\s*([-+])\s*"([^"]*)"$`)
+	reNumber := regexp.MustCompile(`^"([^"]*)"\s*([*/])\s*(\d+)$`)
+
+	if re1 := reString.FindStringSubmatch(expression); re1 != nil {
+		vod1 := re1[1]
+		znak := re1[2]
+		vod2 := re1[3]
+
+		if !Stroka(vod1) || !Stroka(vod2) {
+			panic("макс 10 символов")
+		}
+
+		switch znak {
+		case "+":
+			return Dlina(vod1 + vod2)
+		case "-":
+			return Dlina(strings.Replace(vod1, vod2, "", -1))
+		}
+	}
+
+	if re2 := reNumber.FindStringSubmatch(expression); re2 != nil {
+		vod1 := re2[1]
+		znak := re2[2]
+		vod2 := re2[3]
+
+		num, err := strconv.Atoi(vod2)
+		if err != nil || !Chisla(num) {
+			panic("числа до 10")
+		}
+
+		if !Stroka(vod1) {
+			panic("макс 10 символов")
+		}
+
+		switch znak {
+		case "*":
+			return Dlina(strings.Repeat(vod1, num))
+		case "/":
+			if num == 0 {
+				panic("деление на ноль невозможно")
+			}
+			return Dlina(vod1[:len(vod1)/num])
+		}
+	}
+	panic("чет не то")
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	_ = scanner.Scan()
+	text := scanner.Text()
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
+
+	result := calculate(text)
+	fmt.Println(result)
+}
